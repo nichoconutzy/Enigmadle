@@ -39,6 +39,15 @@ class EnigmaWordleApp:
         style.configure('TLabelframe', background=self.BG)
         style.configure('TLabelframe.Label', background=self.BG, foreground='#64dfc4')
         style.configure('TButton', padding=6)
+        # Round progress and the final result stay visible while the page scrolls.
+        footer = ttk.Frame(self.root, padding=(18, 10))
+        footer.pack(side='bottom', fill='x')
+        self.status_text = tk.StringVar()
+        status_label = ttk.Label(footer, textvariable=self.status_text,
+                                 wraplength=680, font=('Helvetica', 11, 'bold'))
+        status_label.pack(fill='x')
+        footer.bind('<Configure>', lambda event: status_label.configure(
+            wraplength=max(1, event.width - 36)))
         # Keep every control reachable on smaller laptop screens.
         container = ttk.Frame(self.root)
         container.pack(fill='both', expand=True)
@@ -126,8 +135,6 @@ class EnigmaWordleApp:
         self.guess_entry.bind('<Return>', lambda event: self.submit_guess())
         self.submit_button = ttk.Button(guess_panel, text='Submit Guess', command=self.submit_guess)
         self.submit_button.pack(side='left')
-        self.status_text = tk.StringVar()
-        ttk.Label(panel, textvariable=self.status_text, wraplength=680).pack(anchor='w', pady=(10, 0))
 
     def _scroll(self, event):
         # Leave combobox scrolling to the widget so selecting a rotor is predictable.
@@ -243,6 +250,8 @@ class EnigmaWordleApp:
         self.indicator_button.configure(state='disabled')
         self.decrypt_button.configure(state='disabled')
         self.status_text.set(message + ' Select New Game to play again.')
+        messagebox.showinfo('You won!' if self.game.won else 'Out of guesses',
+                            message, parent=self.root)
 
 
 def main():
