@@ -52,7 +52,7 @@ class Puzzle:
         return WordleGame(self.target_word, self.transmission.ciphertext, self.allowed_words)
 
 
-def create_puzzle(words=None, pair_count=10, randomize_rings=False, rng=None):
+def create_puzzle(words=None, pair_count=10, randomize_rings=True, rng=None):
     """Generate the same kind of puzzle for GUI and terminal callers.
 
     Ten plugboard cables and fixed AAA rings match the quoted keyspace.
