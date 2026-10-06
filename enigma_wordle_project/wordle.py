@@ -5,11 +5,11 @@ GREEN = '🟩'
 YELLOW = '🟨'
 GREY = '⬛'
 WORD_LENGTH = 5
-MAX_GUESSES = 6
+MAX_GUESSES = 3
 
 
 def _normalize_word(value, label):
-    #"""Accept ASCII letters only, allowing lowercase and surrounding space."""
+    """Accept ASCII letters only, allowing lowercase and surrounding space."""
     if not isinstance(value, str):
         raise ValueError(f'{label} must be text.')
     value = value.strip()
@@ -63,8 +63,11 @@ class WordleGame:
         return max(0, self.max_guesses - len(self.guesses))
 
     def evaluate_guess(self, guess):
-        """Return feedback string and error message (None if valid)."""
-        
+        """Return (emoji_feedback, None) or (None, error), without recording.
+
+        Exact matches consume letters first. Misplaced matches consume only
+        the remaining occurrences, so repeated letters cannot score twice.
+        """
         if self.game_over:
             return None, 'This game has already ended. Start a new game.'
         try:

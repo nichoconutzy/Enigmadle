@@ -69,7 +69,7 @@ class EnigmaWordleApp:
         ttk.Label(header, text='ENIGMA-WORDLE', font=('Helvetica', 18, 'bold')).pack(side='left')
         ttk.Button(header, text='New Game', command=self.new_game).pack(side='right')
         ttk.Button(header, text='Help', command=self.show_help).pack(side='right', padx=8)
-        ttk.Label(panel, text='Operator training • five-letter words • six guesses').pack(anchor='w', pady=(5, 12))
+        ttk.Label(panel, text=f'Operator training • five-letter words • {MAX_GUESSES} guesses').pack(anchor='w', pady=(5, 12))
 
         intel = ttk.LabelFrame(panel, text='Intercept and daily key', padding=10)
         intel.pack(fill='x')
@@ -153,7 +153,7 @@ class EnigmaWordleApp:
             'three letters are copied to Body windows.\n'
             '3. Decrypt Word starts a fresh machine at those windows, so repeating '
             'it gives the same output.\n'
-            '4. Submit a five-letter word from the word bank. You have six valid guesses.\n\n'
+            f'4. Submit a five-letter word from the word bank. You have {MAX_GUESSES} valid guesses.\n\n'
             'Green: correct letter and position. Yellow: letter in another position. '
             'Grey: no remaining match. Repeated letters are counted individually.\n\n'
             'You can also guess directly. Machine operations do not use guesses. '
