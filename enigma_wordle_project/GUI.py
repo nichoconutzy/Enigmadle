@@ -39,6 +39,10 @@ class EnigmaWordleApp:
         style.configure('TLabelframe', background=self.BG)
         style.configure('TLabelframe.Label', background=self.BG, foreground='#64dfc4')
         style.configure('TButton', padding=6)
+        # A thicker teal insertion caret contrasts with the light input fields.
+        # ttk cursor appearance belongs in the style, not widget options.
+        style.configure('TEntry', insertcolor='#00796b', insertwidth=3)
+        style.configure('TCombobox', insertcolor='#00796b', insertwidth=3)
         # Round progress and the final result stay visible while the page scrolls.
         footer = ttk.Frame(self.root, padding=(18, 10))
         footer.pack(side='bottom', fill='x')
@@ -97,8 +101,14 @@ class EnigmaWordleApp:
             controls = ttk.Frame(settings)
             controls.grid(row=row, column=1, sticky='w')
             for variable in variables:
-                ttk.Combobox(controls, textvariable=variable, values=choices,
-                             state='readonly', width=5).pack(side='left', padx=(0, 8))
+                editable = variables is not self.order_vars
+                field = ttk.Combobox(controls, textvariable=variable, values=choices,
+                                     state='normal' if editable else 'readonly', width=5)
+                field.pack(side='left', padx=(0, 8))
+                if editable:
+                    field.bind('<KeyRelease>', self._uppercase_setting)
+                    field.bind('<FocusOut>', self._uppercase_setting)
+                    field.bind('<FocusIn>', lambda event: event.widget.selection_range(0, tk.END))
         self.plug_var = tk.StringVar()
         ttk.Label(settings, text='Plugboard pairs').grid(row=3, column=0, sticky='w', pady=4)
         ttk.Entry(settings, textvariable=self.plug_var, width=48).grid(row=3, column=1, sticky='ew')
@@ -144,11 +154,33 @@ class EnigmaWordleApp:
             units = -int(event.delta / 120) if abs(event.delta) >= 120 else (-1 if event.delta > 0 else 1)
             self.canvas.yview_scroll(units, 'units')
 
+    def _uppercase_setting(self, event):
+        """Keep typed letters uppercase without moving the insertion cursor."""
+        field = event.widget
+        value = field.get()
+        if value != value.upper():
+            position = field.index(tk.INSERT)
+            field.set(value.upper())
+            field.icursor(position)
+
+    def _letter_settings(self, variables, label):
+        """Validate editable fields before starting any machine operation."""
+        letters = tuple(variable.get().strip().upper() for variable in variables)
+        for position, letter in zip(('left', 'middle', 'right'), letters):
+            if len(letter) != 1 or letter not in ALPHABET:
+                raise ValueError(f'{label}: enter one letter A-Z in the {position} field.')
+        for variable, letter in zip(variables, letters):
+            variable.set(letter)
+        return letters
+
     def show_help(self):
         messagebox.showinfo(
             'How to play',
             'This is an operator-training exercise: the daily key is supplied.\n\n'
             '1. Set rotor order, rings and plugboard to the daily key.\n'
+            'For rings and body windows, type one letter A-Z in each field or '
+            'choose from the dropdown. Lowercase becomes uppercase. Tab moves '
+            'to the next field.\n'
             '2. Decode Indicator starts at the unencrypted OPEN group. The recovered '
             'three letters are copied to Body windows.\n'
             '3. Decrypt Word starts a fresh machine at those windows, so repeating '
@@ -192,9 +224,9 @@ class EnigmaWordleApp:
     def _configured_machine(self, windows=None):
         """Fresh state makes repeated decryption attempts reproducible."""
         return EnigmaMachine(
-            rotors=windows if windows is not None else tuple(v.get() for v in self.window_vars),
+            rotors=windows if windows is not None else self._letter_settings(self.window_vars, 'Body windows'),
             rotor_order=tuple(v.get() for v in self.order_vars),
-            ring_settings=tuple(v.get() for v in self.ring_vars),
+            ring_settings=self._letter_settings(self.ring_vars, 'Ring settings'),
             plugboard=self.plug_var.get().strip())
 
     def decode_indicator(self):
