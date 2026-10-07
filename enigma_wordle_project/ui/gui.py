@@ -1,15 +1,13 @@
-"""Enigma-Wordle operator training GUI. Run: python GUI.py.
-Keep the separated project modules beside this file.
-"""
+"""Enigma-Wordle operator training GUI. Launch through main.py."""
 import random
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from enigma_constants import ALPHABET
-from enigma_machine import EnigmaMachine
-from puzzle import create_puzzle
-from word_bank import load_valid_words
-from wordle import WORD_LENGTH, MAX_GUESSES
+from core.enigma_constants import ALPHABET
+from core.enigma_machine import EnigmaMachine
+from game.puzzle import create_puzzle
+from data.word_bank import load_valid_words
+from game.wordle import WORD_LENGTH, MAX_GUESSES
 
 
 class EnigmaWordleApp:

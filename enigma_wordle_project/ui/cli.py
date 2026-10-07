@@ -1,9 +1,9 @@
-from enigma_constants import ALPHABET, ROTOR_SPECS, REFLECTOR_B
-from enigma_machine import EnigmaMachine, QUOTED_KEYSPACE, plugboard_combinations
-from message_protocol import Transmission
-from puzzle import DailyKey, random_daily_key, create_puzzle
-from word_bank import load_valid_words as _load_words
-from wordle import WordleGame
+from core.enigma_constants import ALPHABET, ROTOR_SPECS, REFLECTOR_B
+from core.enigma_machine import EnigmaMachine, QUOTED_KEYSPACE, plugboard_combinations
+from core.message_protocol import Transmission
+from game.puzzle import DailyKey, random_daily_key, create_puzzle
+from data.word_bank import load_valid_words as _load_words
+from game.wordle import WordleGame
 
 
 def play_game():

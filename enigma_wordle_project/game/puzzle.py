@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 import random
 
-from enigma_constants import ALPHABET, ROTOR_SPECS
-from enigma_machine import EnigmaMachine, _order, _triple, _plugboard, plugboard_combinations
-from message_protocol import Transmission, send_message
-from word_bank import load_valid_words
-from wordle import WordleGame
+from core.enigma_constants import ALPHABET, ROTOR_SPECS
+from core.enigma_machine import EnigmaMachine, _order, _triple, _plugboard, plugboard_combinations
+from core.message_protocol import Transmission, send_message
+from data.word_bank import load_valid_words
+from game.wordle import WordleGame
 
 
 @dataclass(frozen=True)

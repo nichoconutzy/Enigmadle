@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 from math import factorial
 
-from enigma_constants import ALPHABET, ROTOR_SPECS, REFLECTOR_B
+from core.enigma_constants import ALPHABET, ROTOR_SPECS, REFLECTOR_B
 
 
 def _letters(value, length, label):
@@ -177,10 +177,10 @@ class EnigmaMachine:
 
     def send_message(self, plaintext, open_group, message_key):
         """Compatibility shortcut for message_protocol.send_message()."""
-        from message_protocol import send_message
+        from core.message_protocol import send_message
         return send_message(self, plaintext, open_group, message_key)
 
     def receive_message(self, transmission):
         """Compatibility shortcut for message_protocol.receive_message()."""
-        from message_protocol import receive_message
+        from core.message_protocol import receive_message
         return receive_message(self, transmission)

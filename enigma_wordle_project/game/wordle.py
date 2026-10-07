@@ -27,7 +27,7 @@ class WordleGame:
         self.guesses = []
 
         if allowed_words is None:
-            from word_bank import ENGLISH_WORDS
+            from data.word_bank import ENGLISH_WORDS
             allowed_words = ENGLISH_WORDS
         if isinstance(allowed_words, (str, bytes)):
             raise ValueError('Word bank must be a collection of words.')

@@ -7,10 +7,10 @@ def main():
     parser.add_argument('--cli', action='store_true', help='play in the terminal')
     args = parser.parse_args()
     if args.cli:
-        from enigma_wordle import play_game
+        from ui.cli import play_game
         play_game()
     else:
-        from GUI import main as launch_gui
+        from ui.gui import main as launch_gui
         launch_gui()
 
 

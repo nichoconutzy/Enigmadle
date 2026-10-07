@@ -10,13 +10,13 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from enigma_constants import ALPHABET, ROTOR_SPECS
-from enigma_machine import EnigmaMachine, QUOTED_KEYSPACE
-from message_protocol import send_message, receive_message
-from puzzle import create_puzzle, random_daily_key, DailyKey
-from word_bank import ENGLISH_WORDS, load_valid_words
-from wordle import WordleGame
-import enigma_wordle
+from core.enigma_constants import ALPHABET, ROTOR_SPECS
+from core.enigma_machine import EnigmaMachine, QUOTED_KEYSPACE
+from core.message_protocol import send_message, receive_message
+from game.puzzle import create_puzzle, random_daily_key, DailyKey
+from data.word_bank import ENGLISH_WORDS, load_valid_words
+from game.wordle import WordleGame, WORD_LENGTH, MAX_GUESSES
+from ui import cli as enigma_wordle
 
 
 class MachineTests(unittest.TestCase):
@@ -80,7 +80,10 @@ class ProtocolAndPuzzleTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(len(first.target_word), 5)
         self.assertEqual(len(first.daily_key.plugboard_pairs), 10)
-        self.assertEqual(first.daily_key.ring_settings, tuple('AAA'))
+        self.assertEqual(len(first.daily_key.ring_settings), 3)
+        self.assertTrue(all(letter in ALPHABET for letter in first.daily_key.ring_settings))
+        fixed_rings = create_puzzle(randomize_rings=False, rng=random.Random(12))
+        self.assertEqual(fixed_rings.daily_key.ring_settings, tuple('AAA'))
         self.assertEqual(receive_message(first.daily_key.machine(), first.transmission), first.target_word)
         self.assertIs(enigma_wordle.WordleGame, WordleGame)
         self.assertIsInstance(first.new_wordle_game(), WordleGame)
@@ -103,14 +106,14 @@ class WordleTests(unittest.TestCase):
         self.assertEqual(game.evaluate_guess('ALLEY'), ('🟩🟨⬛🟨⬛', None))
         self.assertEqual(game.guesses, [])
 
-    def test_invalid_guesses_and_six_attempts(self):
+    def test_invalid_guesses_and_attempt_limit(self):
         game = WordleGame('APPLE', 'ABCDE')
         for invalid in ('', 'APP', '12345', 'ZZZZZ', None, 'ééééé'):
             self.assertIsNotNone(game.submit_guess(invalid)[1])
             self.assertEqual(len(game.guesses), 0)
-        for _ in range(6):
+        for _ in range(MAX_GUESSES):
             self.assertIsNone(game.submit_guess('CRANE')[1])
-        self.assertEqual(len(game.guesses), 6)
+        self.assertEqual(len(game.guesses), MAX_GUESSES)
         self.assertTrue(game.game_over)
         self.assertEqual(game.remaining_guesses, 0)
         self.assertIsNotNone(game.submit_guess('APPLE')[1])
@@ -148,7 +151,7 @@ class InterfaceTests(unittest.TestCase):
 
     def test_gui_callbacks_and_new_game_reset(self):
         try:
-            import GUI
+            from ui import gui as GUI
         except ModuleNotFoundError as error:
             if error.name == 'tkinter':
                 self.skipTest('Tkinter is not installed')
@@ -169,12 +172,12 @@ class InterfaceTests(unittest.TestCase):
         app.words = load_valid_words()
         app.allowed_words = set(app.words)
         app.rng = random.Random(5)
-        for name in ('key_text', 'intercept_text', 'plug_var', 'output_text', 'status_text', 'guess_entry', 'submit_button'):
+        for name in ('key_text', 'intercept_text', 'plug_var', 'output_text', 'status_text', 'guess_entry', 'submit_button', 'indicator_button', 'decrypt_button'):
             setattr(app, name, Widget())
         for name in ('order_vars', 'ring_vars', 'window_vars'):
             setattr(app, name, [Widget() for _ in range(3)])
-        app.grid_labels = [[Widget() for _ in range(5)] for _ in range(6)]
-        with patch.object(GUI.messagebox, 'showerror') as errors:
+        app.grid_labels = [[Widget() for _ in range(WORD_LENGTH)] for _ in range(MAX_GUESSES)]
+        with patch.object(GUI.messagebox, 'showerror') as errors, patch.object(GUI.messagebox, 'showinfo') as info:
             app.new_game()
             for variable, value in zip(app.order_vars, app.daily_key.rotor_order): variable.set(value)
             for variable, value in zip(app.ring_vars, app.daily_key.ring_settings): variable.set(value)
@@ -192,6 +195,7 @@ class InterfaceTests(unittest.TestCase):
             app.guess_entry.set(app.game.target_word)
             app.submit_guess()
             self.assertTrue(app.game_over)
+            self.assertEqual(info.call_args.args[0], 'You won!')
             self.assertEqual(len(app.game.guesses), 1)
             self.assertTrue(all(t.properties['bg'] == app.TILE_COLOURS['🟩'] for t in app.grid_labels[0]))
             app.new_game()
@@ -200,12 +204,13 @@ class InterfaceTests(unittest.TestCase):
             self.assertEqual(app.guess_entry.properties['state'], 'normal')
             self.assertTrue(all(t.properties['text'] == '' for row in app.grid_labels for t in row))
             wrong = next(w for w in app.words if w != app.game.target_word)
-            for _ in range(6):
+            for _ in range(MAX_GUESSES):
                 app.guess_entry.set(wrong)
                 app.submit_guess()
             self.assertTrue(app.game_over)
-            self.assertEqual(len(app.game.guesses), 6)
+            self.assertEqual(len(app.game.guesses), MAX_GUESSES)
             self.assertEqual(app.submit_button.properties['state'], 'disabled')
+            self.assertEqual(info.call_args.args[0], 'Out of guesses')
 
 
 if __name__ == '__main__':

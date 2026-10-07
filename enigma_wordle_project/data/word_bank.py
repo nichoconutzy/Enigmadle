@@ -262,7 +262,7 @@ def load_valid_words(words=None):
     invalid entries cannot accidentally become puzzle answers.
     """
     import string
-    from wordle import WORD_LENGTH
+    from game.wordle import WORD_LENGTH
 
     entries = ENGLISH_WORDS if words is None else words
     if isinstance(entries, (str, bytes)):

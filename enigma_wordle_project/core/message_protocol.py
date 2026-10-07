@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from enigma_machine import _letters, _triple
+from core.enigma_machine import _letters, _triple
 
 
 @dataclass(frozen=True)
